@@ -1,7 +1,7 @@
-package com.example.guzguzaventuras.ui.levels.club
+package com.example.guzguzaventuras.ui.levels.bar
 
-import android.graphics.Rect
 import android.graphics.RectF
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -11,11 +11,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asAndroidBitmap
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
-import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.imageResource
@@ -30,30 +29,29 @@ import kotlin.random.Random
 @Composable
 fun Level9Screen(navController: NavController) {
     val config = LocalConfiguration.current
-    val screenH = config.screenHeightDp.toFloat()
-    val screenW = config.screenWidthDp.toFloat()
+    val screenH = config.screenHeightDp
+    val screenW = config.screenWidthDp
     val context = LocalContext.current
 
-    // 🌃 Imágenes
-    val fondo = ImageBitmap.imageResource(context.resources, R.drawable.fondo_noche)
-    val perroQuieto = ImageBitmap.imageResource(context.resources, R.drawable.intermedio)
-    val perroDerecha = ImageBitmap.imageResource(context.resources, R.drawable.hacia_delante)
-    val perroIzquierda = ImageBitmap.imageResource(context.resources, R.drawable.hacia_atras)
-    val perroSalto = ImageBitmap.imageResource(context.resources, R.drawable.saltar)
-    val paloma = ImageBitmap.imageResource(context.resources, R.drawable.paloma)
-    val basura = ImageBitmap.imageResource(context.resources, R.drawable.basura)
-    val hindigente = ImageBitmap.imageResource(context.resources, R.drawable.hindigente)
-    val policia = ImageBitmap.imageResource(context.resources, R.drawable.policia)
-    val flechaImg = ImageBitmap.imageResource(context.resources, R.drawable.pipe)
+    // ======= Imágenes =======
+    val bg = ImageBitmap.imageResource(context.resources, R.drawable.niveles)
+    val piedra = ImageBitmap.imageResource(context.resources, R.drawable.piedra)
+    val tronco = ImageBitmap.imageResource(context.resources, R.drawable.tronco)
     val casaTio = ImageBitmap.imageResource(context.resources, R.drawable.casa_tio)
+    val policia = ImageBitmap.imageResource(context.resources, R.drawable.policia)
 
-    // 🐶 Jugador
-    var dog by remember { mutableStateOf(perroQuieto) }
-    val dogSize = 100f
-    val floorY = screenH * 0.82f
+    // ======= Personaje =======
+    val dogQuieto = ImageBitmap.imageResource(context.resources, R.drawable.intermedio)
+    val dogRight = ImageBitmap.imageResource(context.resources, R.drawable.hacia_delante)
+    val dogLeft = ImageBitmap.imageResource(context.resources, R.drawable.hacia_atras)
+    val dogJump = ImageBitmap.imageResource(context.resources, R.drawable.saltar)
+    var dog by remember { mutableStateOf(dogQuieto) }
+
+    val dogSizeDp = 100.dp
+    val floorY = screenH * 0.60f
     var playerX by remember { mutableStateOf(100f) }
     var playerY by remember { mutableStateOf(floorY) }
-    var velocityY by remember { mutableStateOf(0f) }
+    var velocity by remember { mutableStateOf(0f) }
     var jumping by remember { mutableStateOf(false) }
     var cameraX by remember { mutableStateOf(0f) }
     var dead by remember { mutableStateOf(false) }
@@ -62,270 +60,192 @@ fun Level9Screen(navController: NavController) {
     val gravity = 2.2f
     val jumpForce = -28f
 
-    // ================= PALOMAS =================
-    class Paloma(val x: Float, val y: Float, val cooldown: Int)
-    val palomas = remember {
-        mutableStateListOf(
-            Paloma(1000f, 10f, 90),
-            Paloma(2300f, 15f, 85),
-            Paloma(3200f, 5f, 95),
-            Paloma(4200f, 20f, 90),
-            Paloma(5400f, 15f, 90),
-            Paloma(6500f, 10f, 100)
-        )
-    }
-
-    // ================= POLICÍAS =================
-    class PoliciaMovil(
-        var x: Float,
-        var dir: Float,
-        val minX: Float,
-        val maxX: Float,
-        var speed: Float
-    )
-    val policias = remember {
-        mutableStateListOf(
-            PoliciaMovil(4400f, 1f, 4400f, 4700f, 2.5f)
-        )
-    }
-
-    // ================= OBSTÁCULOS =================
-    val H = 100f * 1.3f
+    // ======= Obstáculos =======
+    val H = 100f
     val obstacles = listOf(
-        RectF(1400f, floorY - H + 20f, 1520f, floorY + 20f),
-        RectF(1900f, floorY - H + 20f, 2020f, floorY + 20f),
-        RectF(2500f, floorY - H + 20f, 2620f, floorY + 20f),
-        RectF(3500f, floorY - H + 20f, 3620f, floorY + 20f),
-        RectF(5100f, floorY - H + 20f, 5220f, floorY + 20f),
-        RectF(5900f, floorY - H + 20f, 6020f, floorY + 20f)
+        RectF(900f, floorY - H, 1020f, floorY),   // piedra
+        RectF(1400f, floorY - H, 1520f, floorY),  // piedra
+        RectF(2000f, floorY - H, 2120f, floorY),  // tronco
+        RectF(2800f, floorY - H, 2920f, floorY),  // piedra
+        RectF(3600f, floorY - H, 3720f, floorY),  // piedra
+        RectF(4400f, floorY - H, 4520f, floorY)   // piedra
     )
 
-    // ================= FLECHAS =================
-    class Flecha(
-        var x: Float,
-        var y: Float,
-        var speedY: Float = 0f,
-        val gravity: Float = 1.8f,
-        val w: Float = 40f,
-        val h: Float = 100f
-    )
-    val flechas = remember { mutableStateListOf<Flecha>() }
+    // ======= Policías =======
+    val enemyY = floorY - 100f
+    val enemyW = 100f
+    val enemyH = 100f
 
-    // ================= META =================
-    val goalX = 7000f
+    val enemyX = remember { mutableStateListOf(500f, 2400f, 3200f, 4000f, 5000f) }
+    val enemyDir = remember { mutableStateListOf(1f, 1f, 1f, 1f, 1f) }
+    val enemySpeed = remember { mutableStateListOf(4f, 4f, 5f, 4f, 4f) }
+    val enemyIsVariable = listOf(true, true, false, true, true)
+
+    val start = floatArrayOf(500f, 2400f, 3200f, 4000f, 5000f)
+    val end = floatArrayOf(800f, 2700f, 3500f, 4300f, 5300f)
+
+    // ======= Meta =======
+    val goalX = 7800f
     val goalRect = RectF(goalX, floorY - 350f + 30f, goalX + 320f, floorY + 30f)
 
-    // ================= BUCLE PRINCIPAL =================
+    // ======= Bucle principal =======
     LaunchedEffect(Unit) {
-        var tick = 0
         while (true) {
             delay(16)
-            tick++
-
             if (!dead && !completed) {
-                // Salto y gravedad
                 if (jumping) {
-                    playerY += velocityY
-                    velocityY += gravity
+                    playerY += velocity
+                    velocity += gravity
                     if (playerY >= floorY) {
                         playerY = floorY
-                        velocityY = 0f
+                        velocity = 0f
                         jumping = false
-                        dog = perroQuieto
+                        dog = dogQuieto
+                    }
+                }
+
+                // Movimiento y velocidad variable de policías
+                for (i in enemyX.indices) {
+                    val next = enemyX[i] + enemyDir[i] * enemySpeed[i]
+                    enemyX[i] = next
+                    if (next < start[i]) enemyDir[i] = 1f
+                    if (next > end[i]) enemyDir[i] = -1f
+                    if (enemyIsVariable[i] && Random.nextInt(0, 100) < 3) {
+                        enemySpeed[i] = Random.nextFloat() * 7f + 3f // 3 a 10
                     }
                 }
 
                 // Cámara
                 cameraX = (playerX - screenW * 0.3f).coerceAtLeast(0f)
 
-                // Movimiento policías
-                policias.forEach { p ->
-                    p.x += p.dir * p.speed
-                    if (p.x < p.minX || p.x > p.maxX) p.dir *= -1
-                    if (tick % 60 == 0) {
-                        p.speed = Random.nextFloat() * 4f + 1.5f
-                    }
-                }
-
-                // Disparos palomas
-                palomas.forEach { p ->
-                    if (tick % p.cooldown == 0) {
-                        flechas.add(Flecha(p.x + 40f, p.y + 60f))
-                    }
-                }
-
-                // Movimiento flechas
-                val iterator = flechas.iterator()
-                while (iterator.hasNext()) {
-                    val f = iterator.next()
-                    f.speedY += f.gravity
-                    f.y += f.speedY
-                    if (f.y > screenH + 200f) iterator.remove()
-                }
-
-                // Colisiones
+                // Hitbox del jugador
                 val playerRect = RectF(
                     playerX + 15f,
-                    playerY - dogSize + 25f,
-                    playerX + dogSize - 15f,
+                    playerY - dogSizeDp.value + 25f,
+                    playerX + dogSizeDp.value - 15f,
                     playerY + 25f
                 )
 
-                // Obstáculos
-                obstacles.forEachIndexed { _, o ->
+                // Colisiones con obstáculos
+                for (o in obstacles) {
                     val overlap = playerRect.bottom > o.top && playerRect.top < o.bottom &&
                             playerRect.right > o.left && playerRect.left < o.right
                     if (overlap) {
                         if (playerRect.right > o.left && playerRect.left < o.left)
-                            playerX = o.left - dogSize + 5f
+                            playerX = o.left - dogSizeDp.value + 5f
                         else if (playerRect.left < o.right && playerRect.right > o.right)
                             playerX = o.right + 5f
                     }
                 }
 
-                // Policías
-                for (p in policias) {
-                    val rectPol = RectF(p.x, floorY - 100f, p.x + 130f, floorY)
-                    val collide = playerRect.right > rectPol.left &&
-                            playerRect.left < rectPol.right &&
-                            playerRect.bottom > rectPol.top &&
-                            playerRect.top < rectPol.bottom
-                    if (collide) dead = true
-                }
-
-                // Flechas
-                for (f in flechas) {
-                    val rectFlecha = RectF(f.x, f.y, f.x + f.w, f.y + f.h)
-                    val collide = playerRect.right > rectFlecha.left &&
-                            playerRect.left < rectFlecha.right &&
-                            playerRect.bottom > rectFlecha.top &&
-                            playerRect.top < rectFlecha.bottom
-                    if (collide) dead = true
+                // Colisiones con policías
+                for (i in enemyX.indices) {
+                    val er = RectF(enemyX[i], enemyY, enemyX[i] + enemyW, enemyY + enemyH)
+                    val collide = playerRect.right > er.left && playerRect.left < er.right &&
+                            playerRect.bottom > er.top && playerRect.top < er.bottom
+                    if (collide) { dead = true; break }
                 }
 
                 // Meta
                 if (playerRect.right > goalRect.left && playerRect.left < goalRect.right)
                     completed = true
-
             } else if (dead) {
                 playerY += 14f
             }
         }
     }
 
-    // ================= REINICIOS =================
+    // ======= Reinicios =======
     LaunchedEffect(dead) {
         if (dead) {
             delay(1200)
-            navController.navigate("level9") { popUpTo("level9") { inclusive = true } }
+            navController.navigate("level7") { popUpTo("level7") { inclusive = true } }
         }
     }
 
+    // ✅ CORREGIDO → vuelve al menú del segundo mundo
     LaunchedEffect(completed) {
         if (completed) {
             delay(1500)
-            // ✅ Ahora vuelve al menú del Mundo 3
-            navController.navigate("levels3") { popUpTo("level9") { inclusive = true } }
+            navController.navigate("levels2") { // 🔥 antes decía "levels"
+                popUpTo("level7") { inclusive = true }
+            }
         }
     }
 
-    // ================= DIBUJO =================
+    // ======= Animación de apagones rápidos =======
+    val infiniteTransition = rememberInfiniteTransition(label = "darkFade")
+    val darkOverlayAlpha by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1000, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "alpha"
+    )
+
+    // ======= DIBUJO =======
     Box(Modifier.fillMaxSize()) {
-        // Fondo
         Canvas(Modifier.fillMaxSize()) {
-            val scale = size.height / fondo.height.toFloat()
-            val scaledWidth = fondo.width * scale
-            val repeatCount = (7000 / scaledWidth).toInt() + 4
-            drawIntoCanvas { canvas ->
-                val nativeCanvas = canvas.nativeCanvas
-                for (i in -1..repeatCount) {
-                    val left = i * scaledWidth - cameraX
-                    val rectDst = Rect(
-                        left.toInt(), 0, (left + scaledWidth).toInt(), size.height.toInt()
-                    )
-                    nativeCanvas.drawBitmap(fondo.asAndroidBitmap(), null, rectDst, null)
-                }
-            }
+            val bgW = bg.width.toFloat()
+            for (i in -1..20) drawImage(bg, topLeft = Offset(bgW * i - cameraX, 0f))
         }
 
-        // Obstáculos
         obstacles.forEachIndexed { i, r ->
-            val img = if (i % 2 == 0) basura else hindigente
+            val img = if (i == 2) tronco else piedra
             Image(
                 bitmap = img,
-                contentDescription = "Obstáculo",
-                modifier = Modifier
-                    .offset((r.left - cameraX).dp, (r.top + 20f).dp)
-                    .size((r.width() * 1.3f).dp, (r.height() * 1.3f).dp)
+                contentDescription = null,
+                modifier = Modifier.offset((r.left - cameraX).dp, r.top.dp)
+                    .size(r.width().dp, r.height().dp)
             )
         }
 
-        // Policía — Subido al nivel de Juantino
-        policias.forEach { p ->
+        enemyX.forEach { ex ->
             Image(
                 bitmap = policia,
                 contentDescription = "Policía",
-                modifier = Modifier
-                    .offset((p.x - cameraX).dp, (floorY - 100f).dp)
-                    .size(130.dp)
+                modifier = Modifier.offset((ex - cameraX).dp, enemyY.dp)
+                    .size(enemyW.dp, enemyH.dp)
             )
         }
 
-        // Palomas
-        palomas.forEach { p ->
-            Image(
-                bitmap = paloma,
-                contentDescription = "Paloma enemiga",
-                modifier = Modifier
-                    .offset((p.x - cameraX).dp, p.y.dp)
-                    .size(70.dp)
-            )
-        }
-
-        // Flechas
-        flechas.forEach { f ->
-            Image(
-                bitmap = flechaImg,
-                contentDescription = "Flecha",
-                modifier = Modifier
-                    .offset((f.x - cameraX).dp, f.y.dp)
-                    .size(f.w.dp, f.h.dp)
-            )
-        }
-
-        // Meta
         Image(
             bitmap = casaTio,
             contentDescription = "Meta",
-            modifier = Modifier
-                .offset((goalRect.left - cameraX).dp, goalRect.top.dp)
+            modifier = Modifier.offset((goalRect.left - cameraX).dp, goalRect.top.dp)
                 .size(320.dp, 350.dp)
         )
 
-        // Jugador
         Image(
             bitmap = dog,
-            contentDescription = "Jugador",
-            modifier = Modifier
-                .offset((playerX - cameraX).dp, (playerY - dogSize + 20f).dp)
-                .size(dogSize.dp)
+            contentDescription = null,
+            modifier = Modifier.offset((playerX - cameraX).dp, (playerY - dogSizeDp.value + 20f).dp)
+                .size(dogSizeDp)
         )
 
-        // Controles
+        // 🌑 Oscuridad intermitente
+        Canvas(Modifier.fillMaxSize()) {
+            drawRect(
+                color = Color.Black.copy(alpha = darkOverlayAlpha),
+                size = Size(size.width, size.height)
+            )
+        }
+
         Row(
             Modifier.align(Alignment.BottomEnd).padding(20.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            HoldableButton("←") { playerX -= 40f; if (!jumping) dog = perroIzquierda }
+            HoldableButton("←") { playerX -= 40f; if (!jumping) dog = dogLeft }
             HoldableButton("↑") {
                 if (!jumping) {
-                    jumping = true; velocityY = jumpForce; dog = perroSalto
+                    jumping = true; velocity = jumpForce; dog = dogJump
                 }
             }
-            HoldableButton("→") { playerX += 40f; if (!jumping) dog = perroDerecha }
+            HoldableButton("→") { playerX += 40f; if (!jumping) dog = dogRight }
         }
 
-        // Mensajes
         if (completed)
             Box(
                 Modifier.align(Alignment.Center)
@@ -338,6 +258,6 @@ fun Level9Screen(navController: NavController) {
                 Modifier.align(Alignment.Center)
                     .background(Color(0xFF8B3E3E), RoundedCornerShape(50))
                     .padding(16.dp)
-            ) { Text("¡Te eliminaron!", color = Color.White, fontWeight = FontWeight.Bold) }
+            ) { Text("¡El policía te atrapó en la oscuridad!", color = Color.White, fontWeight = FontWeight.Bold) }
     }
 }

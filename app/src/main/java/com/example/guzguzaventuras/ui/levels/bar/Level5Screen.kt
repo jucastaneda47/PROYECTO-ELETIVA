@@ -1,4 +1,4 @@
-package com.example.guzguzaventuras.ui.levels.bar
+package com.example.guzguzaventuras.ui.levels.tio
 
 import android.graphics.RectF
 import androidx.compose.foundation.Canvas
@@ -30,61 +30,77 @@ fun Level5Screen(navController: NavController) {
     val screenW = config.screenWidthDp
     val context = LocalContext.current
 
-    // Imágenes
+    // 🖼️ Imágenes
     val bg = ImageBitmap.imageResource(context.resources, R.drawable.niveles)
     val piedra = ImageBitmap.imageResource(context.resources, R.drawable.piedra)
     val tronco = ImageBitmap.imageResource(context.resources, R.drawable.tronco)
     val casaTio = ImageBitmap.imageResource(context.resources, R.drawable.casa_tio)
-    val policia = ImageBitmap.imageResource(context.resources, R.drawable.policia)
 
-    // Personaje
     val dogQuieto = ImageBitmap.imageResource(context.resources, R.drawable.intermedio)
     val dogRight = ImageBitmap.imageResource(context.resources, R.drawable.hacia_delante)
     val dogLeft = ImageBitmap.imageResource(context.resources, R.drawable.hacia_atras)
     val dogJump = ImageBitmap.imageResource(context.resources, R.drawable.saltar)
     var dog by remember { mutableStateOf(dogQuieto) }
 
-    val dogSizeDp = 100.dp
+    // 🐶 Config jugador
+    val dogSizeDp = 90.dp
     val floorY = screenH * 0.60f
     var playerX by remember { mutableStateOf(100f) }
     var playerY by remember { mutableStateOf(floorY) }
     var velocity by remember { mutableStateOf(0f) }
     var jumping by remember { mutableStateOf(false) }
-    var cameraX by remember { mutableStateOf(0f) }
-    var dead by remember { mutableStateOf(false) }
-    var completed by remember { mutableStateOf(false) }
+    var levelCompleted by remember { mutableStateOf(false) }
 
     val gravity = 2.2f
     val jumpForce = -28f
+    var cameraX by remember { mutableStateOf(0f) }
 
-    // Obstáculos (piedra, tronco, etc.)
-    val H = 100f
+    // 🪨 Obstáculos fijos
     val obstacles = listOf(
-        RectF(900f, floorY - H, 1020f, floorY),
-        RectF(1400f, floorY - H, 1520f, floorY),
-        RectF(2600f, floorY - H, 2720f, floorY),
-        RectF(3000f, floorY - H, 3120f, floorY),
-        RectF(3400f, floorY - H, 3520f, floorY)
+        RectF(600f, floorY - 95f, 720f, floorY + 25f),   // piedra
+        RectF(1200f, floorY - 95f, 1320f, floorY + 25f), // piedra
+        RectF(2000f, floorY - 95f, 2120f, floorY + 25f), // piedra
+        RectF(2600f, floorY - 95f, 2720f, floorY + 25f), // piedra
+        RectF(3200f, floorY - 95f, 3320f, floorY + 25f)  // piedra
     )
 
-    // Policías
-    val enemyY = floorY - 100f
-    val enemyW = 100f
-    val enemyH = 100f
-    val enemyX = remember { mutableStateListOf(500f, 1900f, 2250f, 3800f, 4700f) }
-    val enemyDir = remember { mutableStateListOf(1f, 1f, -1f, 1f, 1f) }
-    val start = floatArrayOf(500f, 1900f, 2250f, 3800f, 4700f)
-    val end = floatArrayOf(800f, 2200f, 2500f, 4100f, 4950f)
+    // 🌲 Troncos móviles
+    var trunk1X by remember { mutableStateOf(1550f) } // entre piedra 2 y 3
+    var trunk1Dir by remember { mutableStateOf(1) }
 
-    // Meta
-    val goalX = 5200f
-    val goalRect = RectF(goalX, floorY - 350f + 30f, goalX + 320f, floorY + 30f)
+    var trunk2X by remember { mutableStateOf(4000f) } // antes de la meta
+    var trunk2Dir by remember { mutableStateOf(1) }
 
-    // Física + movimiento
+    val trunkWidth = 120f
+    val trunkHeight = 120f
+
+    // 🎞️ Movimiento constante de ambos troncos
     LaunchedEffect(Unit) {
         while (true) {
             delay(16)
-            if (!dead && !completed) {
+
+            // Tronco 1
+            trunk1X += trunk1Dir * 4f
+            if (trunk1X < 1450f || trunk1X > 1750f) trunk1Dir *= -1
+
+            // Tronco 2
+            trunk2X += trunk2Dir * 4f
+            if (trunk2X < 3900f || trunk2X > 4100f) trunk2Dir *= -1
+        }
+    }
+
+    // 🏠 Meta al final del nivel
+    val goalX = 4700f
+    val goalWidth = 320f
+    val goalHeight = 350f
+    val goalRect = RectF(goalX, floorY - goalHeight + 30f, goalX + goalWidth, floorY + 30f)
+
+    // ⚙️ Física del jugador
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(16)
+            if (!levelCompleted) {
+                // Gravedad / salto
                 if (jumping) {
                     playerY += velocity
                     velocity += gravity
@@ -96,115 +112,109 @@ fun Level5Screen(navController: NavController) {
                     }
                 }
 
-                for (i in enemyX.indices) {
-                    val next = enemyX[i] + enemyDir[i] * 3f
-                    enemyX[i] = next
-                    if (next < start[i]) enemyDir[i] = 1f
-                    if (next > end[i]) enemyDir[i] = -1f
-                }
-
+                // Cámara sigue al jugador
                 cameraX = (playerX - screenW * 0.3f).coerceAtLeast(0f)
 
                 val playerRect = RectF(
-                    playerX + 15f,
-                    playerY - dogSizeDp.value + 25f,
-                    playerX + dogSizeDp.value - 15f,
-                    playerY + 25f
+                    playerX + 10f,
+                    playerY - dogSizeDp.value + 22f,
+                    playerX + dogSizeDp.value - 10f,
+                    playerY + 22f
                 )
 
                 // Colisiones con obstáculos
-                for (o in obstacles) {
-                    val overlap = playerRect.bottom > o.top && playerRect.top < o.bottom &&
+                val allObstacles = obstacles +
+                        RectF(trunk1X, floorY - 95f, trunk1X + trunkWidth, floorY + 25f) +
+                        RectF(trunk2X, floorY - 95f, trunk2X + trunkWidth, floorY + 25f)
+
+                for (o in allObstacles) {
+                    val overlaps = playerRect.bottom > o.top && playerRect.top < o.bottom &&
                             playerRect.right > o.left && playerRect.left < o.right
-                    if (overlap) {
-                        if (playerRect.right > o.left && playerRect.left < o.left)
+
+                    if (overlaps) {
+                        // Desde la izquierda
+                        if (playerRect.right > o.left && playerRect.left < o.left) {
                             playerX = o.left - dogSizeDp.value + 5f
-                        else if (playerRect.left < o.right && playerRect.right > o.right)
+                        }
+                        // Desde la derecha
+                        else if (playerRect.left < o.right && playerRect.right > o.right) {
                             playerX = o.right + 5f
+                        }
                     }
                 }
 
-                // Colisión con policías
-                for (i in enemyX.indices) {
-                    val er = RectF(enemyX[i], enemyY, enemyX[i] + enemyW, enemyY + enemyH)
-                    val collide = playerRect.right > er.left && playerRect.left < er.right &&
-                            playerRect.bottom > er.top && playerRect.top < er.bottom
-                    if (collide) { dead = true; break }
+                // Meta alcanzada
+                if (playerRect.right > goalRect.left && playerRect.left < goalRect.right) {
+                    levelCompleted = true
                 }
-
-                // Meta
-                if (playerRect.right > goalRect.left && playerRect.left < goalRect.right)
-                    completed = true
-            } else if (dead) {
-                playerY += 14f
             }
         }
     }
 
-    // 🔁 Reinicio correcto del nivel
-    LaunchedEffect(dead) {
-        if (dead) {
-            delay(1200)
-            navController.navigate("level5") { // ✅ ruta según tu AppNavigation
-                popUpTo("level5") { inclusive = true }
-            }
-        }
-    }
-
-    // ✅ Vuelta al menú del mundo 2
-    LaunchedEffect(completed) {
-        if (completed) {
+    // ✅ Regresa a la pantalla de niveles
+    LaunchedEffect(levelCompleted) {
+        if (levelCompleted) {
             delay(1500)
-            navController.navigate("levels2") { // ✅ menú correcto
-                popUpTo("level5") { inclusive = true }
+            navController.navigate("levels") {
+                popUpTo("level4") { inclusive = true }
             }
         }
     }
 
-    // Dibujo
+    // 🎨 Dibujo
     Box(Modifier.fillMaxSize()) {
+        // Fondo extendido
         Canvas(Modifier.fillMaxSize()) {
             val bgW = bg.width.toFloat()
-            for (i in -1..12) drawImage(bg, topLeft = Offset(bgW * i - cameraX, 0f))
+            for (i in -1..8) drawImage(bg, topLeft = Offset(bgW * i - cameraX, 0f))
         }
 
-        obstacles.forEachIndexed { i, r ->
-            val img = if (i % 2 == 0) piedra else tronco
+        // Obstáculos
+        obstacles.forEach {
             Image(
-                bitmap = img,
+                bitmap = piedra,
                 contentDescription = null,
                 modifier = Modifier
-                    .offset((r.left - cameraX).dp, r.top.dp)
-                    .size(r.width().dp, r.height().dp)
+                    .offset((it.left - cameraX).dp, it.top.dp)
+                    .size(it.width().dp, it.height().dp)
             )
         }
 
-        enemyX.forEach { ex ->
-            Image(
-                bitmap = policia,
-                contentDescription = "Policía",
-                modifier = Modifier
-                    .offset((ex - cameraX).dp, enemyY.dp)
-                    .size(enemyW.dp, enemyH.dp)
-            )
-        }
-
+        // Troncos móviles
         Image(
-            bitmap = casaTio,
-            contentDescription = "Meta",
+            bitmap = tronco,
+            contentDescription = null,
             modifier = Modifier
-                .offset((goalRect.left - cameraX).dp, goalRect.top.dp)
-                .size(320.dp, 350.dp)
+                .offset((trunk1X - cameraX).dp, (floorY - 95f).dp)
+                .size(trunkWidth.dp, trunkHeight.dp)
+        )
+        Image(
+            bitmap = tronco,
+            contentDescription = null,
+            modifier = Modifier
+                .offset((trunk2X - cameraX).dp, (floorY - 95f).dp)
+                .size(trunkWidth.dp, trunkHeight.dp)
         )
 
+        // Meta
+        Image(
+            bitmap = casaTio,
+            contentDescription = null,
+            modifier = Modifier
+                .offset((goalRect.left - cameraX).dp, goalRect.top.dp)
+                .size(goalWidth.dp, goalHeight.dp)
+        )
+
+        // Personaje
         Image(
             bitmap = dog,
-            contentDescription = "Jugador",
+            contentDescription = null,
             modifier = Modifier
-                .offset((playerX - cameraX).dp, (playerY - dogSizeDp.value + 20f).dp)
+                .offset((playerX - cameraX).dp, (playerY - dogSizeDp.value + 22f).dp)
                 .size(dogSizeDp)
         )
 
+        // Controles
         Row(
             Modifier.align(Alignment.BottomEnd).padding(20.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -218,22 +228,14 @@ fun Level5Screen(navController: NavController) {
             HoldableButton("→") { playerX += 40f; if (!jumping) dog = dogRight }
         }
 
-        if (completed)
+        // Mensaje de victoria
+        if (levelCompleted)
             Box(
-                Modifier.align(Alignment.Center)
+                modifier = Modifier.align(Alignment.Center)
                     .background(Color(0xFF3E4A8B), RoundedCornerShape(50))
                     .padding(16.dp)
             ) {
                 Text("¡Nivel completado!", color = Color.White, fontWeight = FontWeight.Bold)
-            }
-
-        if (dead)
-            Box(
-                Modifier.align(Alignment.Center)
-                    .background(Color(0xFF8B3E3E), RoundedCornerShape(50))
-                    .padding(16.dp)
-            ) {
-                Text("¡El policía te atrapó!", color = Color.White, fontWeight = FontWeight.Bold)
             }
     }
 }

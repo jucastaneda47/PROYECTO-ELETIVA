@@ -1,4 +1,4 @@
-package com.example.guzguzaventuras.ui.levels.tio
+package com.example.guzguzaventuras.ui.levels
 
 import android.graphics.RectF
 import androidx.compose.foundation.Canvas
@@ -13,6 +13,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.imageResource
@@ -20,140 +23,166 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.guzguzaventuras.R
-import com.example.guzguzaventuras.ui.levels.HoldableButton
 import kotlinx.coroutines.delay
+import kotlin.math.sin
+import kotlin.random.Random
 
 @Composable
 fun Level4Screen(navController: NavController) {
     val config = LocalConfiguration.current
-    val screenH = config.screenHeightDp
-    val screenW = config.screenWidthDp
+    val screenH = config.screenHeightDp.toFloat()
+    val screenW = config.screenWidthDp.toFloat()
     val context = LocalContext.current
 
-    // 🖼️ Imágenes
-    val bg = ImageBitmap.imageResource(context.resources, R.drawable.niveles)
-    val piedra = ImageBitmap.imageResource(context.resources, R.drawable.piedra)
-    val tronco = ImageBitmap.imageResource(context.resources, R.drawable.tronco)
-    val casaTio = ImageBitmap.imageResource(context.resources, R.drawable.casa_tio)
+    // 🎨 Imágenes
+    val fondo = ImageBitmap.imageResource(context.resources, R.drawable.niveles)
+    val bossDer = ImageBitmap.imageResource(context.resources, R.drawable.mami)
+    val bossIzq = ImageBitmap.imageResource(context.resources, R.drawable.mami)
+    val juanQuieto = ImageBitmap.imageResource(context.resources, R.drawable.intermedio)
+    val juanDer = ImageBitmap.imageResource(context.resources, R.drawable.hacia_delante)
+    val juanIzq = ImageBitmap.imageResource(context.resources, R.drawable.hacia_atras)
+    val juanSalto = ImageBitmap.imageResource(context.resources, R.drawable.saltar)
 
-    val dogQuieto = ImageBitmap.imageResource(context.resources, R.drawable.intermedio)
-    val dogRight = ImageBitmap.imageResource(context.resources, R.drawable.hacia_delante)
-    val dogLeft = ImageBitmap.imageResource(context.resources, R.drawable.hacia_atras)
-    val dogJump = ImageBitmap.imageResource(context.resources, R.drawable.saltar)
-    var dog by remember { mutableStateOf(dogQuieto) }
+    // 🧨 Nuevos proyectiles separados
+    val balaJuantino = ImageBitmap.imageResource(context.resources, R.drawable.botella)
+    val balaMama = ImageBitmap.imageResource(context.resources, R.drawable.chancla)
 
-    // 🐶 Config jugador
-    val dogSizeDp = 90.dp
-    val floorY = screenH * 0.60f
-    var playerX by remember { mutableStateOf(100f) }
+    // 🐶 Juantinofxd
+    var dog by remember { mutableStateOf(juanQuieto) }
+    val dogSize = 100f
+    val dogScale = 1.35f
+    val floorY = screenH * 0.75f
+    var playerX by remember { mutableStateOf(200f) }
     var playerY by remember { mutableStateOf(floorY) }
-    var velocity by remember { mutableStateOf(0f) }
+    var velocityY by remember { mutableStateOf(0f) }
     var jumping by remember { mutableStateOf(false) }
-    var levelCompleted by remember { mutableStateOf(false) }
+    var facingRight by remember { mutableStateOf(true) }
+
+    // 💥 Balas de Juantino
+    data class Bala(var x: Float, var y: Float, var dir: Float)
+    val balas = remember { mutableStateListOf<Bala>() }
+
+    // 👹 Boss (mamá)
+    var bossX by remember { mutableStateOf(800f) }
+    var bossY by remember { mutableStateOf(floorY - 150f) }
+    var bossDir by remember { mutableStateOf(1f) }
+    var bossVida by remember { mutableStateOf(100) }
+    val bossDisparos = remember { mutableStateListOf<Bala>() }
+
+    // ⚙️ Estados
+    var dead by remember { mutableStateOf(false) }
+    var completed by remember { mutableStateOf(false) }
 
     val gravity = 2.2f
     val jumpForce = -28f
-    var cameraX by remember { mutableStateOf(0f) }
 
-    // 🪨 Obstáculos fijos
-    val obstacles = listOf(
-        RectF(600f, floorY - 95f, 720f, floorY + 25f),   // piedra
-        RectF(1200f, floorY - 95f, 1320f, floorY + 25f), // piedra
-        RectF(2000f, floorY - 95f, 2120f, floorY + 25f), // piedra
-        RectF(2600f, floorY - 95f, 2720f, floorY + 25f), // piedra
-        RectF(3200f, floorY - 95f, 3320f, floorY + 25f)  // piedra
-    )
-
-    // 🌲 Troncos móviles
-    var trunk1X by remember { mutableStateOf(1550f) } // entre piedra 2 y 3
-    var trunk1Dir by remember { mutableStateOf(1) }
-
-    var trunk2X by remember { mutableStateOf(4000f) } // antes de la meta
-    var trunk2Dir by remember { mutableStateOf(1) }
-
-    val trunkWidth = 120f
-    val trunkHeight = 120f
-
-    // 🎞️ Movimiento constante de ambos troncos
+    // ================= BUCLE PRINCIPAL =================
     LaunchedEffect(Unit) {
+        var tick = 0
         while (true) {
             delay(16)
+            tick++
 
-            // Tronco 1
-            trunk1X += trunk1Dir * 4f
-            if (trunk1X < 1450f || trunk1X > 1750f) trunk1Dir *= -1
+            if (!dead && !completed) {
 
-            // Tronco 2
-            trunk2X += trunk2Dir * 4f
-            if (trunk2X < 3900f || trunk2X > 4100f) trunk2Dir *= -1
-        }
-    }
-
-    // 🏠 Meta al final del nivel
-    val goalX = 4700f
-    val goalWidth = 320f
-    val goalHeight = 350f
-    val goalRect = RectF(goalX, floorY - goalHeight + 30f, goalX + goalWidth, floorY + 30f)
-
-    // ⚙️ Física del jugador
-    LaunchedEffect(Unit) {
-        while (true) {
-            delay(16)
-            if (!levelCompleted) {
-                // Gravedad / salto
+                // Movimiento y salto del jugador
                 if (jumping) {
-                    playerY += velocity
-                    velocity += gravity
+                    playerY += velocityY
+                    velocityY += gravity
                     if (playerY >= floorY) {
                         playerY = floorY
-                        velocity = 0f
+                        velocityY = 0f
                         jumping = false
-                        dog = dogQuieto
+                        dog = if (facingRight) juanDer else juanIzq
                     }
                 }
 
-                // Cámara sigue al jugador
-                cameraX = (playerX - screenW * 0.3f).coerceAtLeast(0f)
+                // Movimiento del boss
+                bossX += bossDir * 3f
+                if (bossX < 400f) bossDir = 1f
+                if (bossX > screenW - 250f) bossDir = -1f
 
-                val playerRect = RectF(
-                    playerX + 10f,
-                    playerY - dogSizeDp.value + 22f,
-                    playerX + dogSizeDp.value - 10f,
-                    playerY + 22f
-                )
-
-                // Colisiones con obstáculos
-                val allObstacles = obstacles +
-                        RectF(trunk1X, floorY - 95f, trunk1X + trunkWidth, floorY + 25f) +
-                        RectF(trunk2X, floorY - 95f, trunk2X + trunkWidth, floorY + 25f)
-
-                for (o in allObstacles) {
-                    val overlaps = playerRect.bottom > o.top && playerRect.top < o.bottom &&
-                            playerRect.right > o.left && playerRect.left < o.right
-
-                    if (overlaps) {
-                        // Desde la izquierda
-                        if (playerRect.right > o.left && playerRect.left < o.left) {
-                            playerX = o.left - dogSizeDp.value + 5f
+                // Disparos del boss aleatorios
+                if (tick % 60 == 0) {
+                    val tipo = Random.nextInt(0, 3)
+                    when (tipo) {
+                        0 -> { // horizontal
+                            val dir = if (bossDir > 0) 1f else -1f
+                            bossDisparos.add(Bala(bossX, bossY - 10f, dir))
                         }
-                        // Desde la derecha
-                        else if (playerRect.left < o.right && playerRect.right > o.right) {
-                            playerX = o.right + 5f
+                        1 -> { // diagonal
+                            val dir = if (bossDir > 0) 1f else -1f
+                            bossDisparos.add(Bala(bossX, bossY - 20f, dir))
+                        }
+                        2 -> { // hacia arriba
+                            bossDisparos.add(Bala(bossX + 50f, bossY - 30f, 0f))
                         }
                     }
                 }
 
-                // Meta alcanzada
-                if (playerRect.right > goalRect.left && playerRect.left < goalRect.right) {
-                    levelCompleted = true
+                // Movimiento de las balas del boss (chanclas)
+                val toRemoveBoss = mutableListOf<Bala>()
+                for (b in bossDisparos) {
+                    if (b.dir == 0f) {
+                        b.y -= 8f
+                    } else {
+                        b.x += b.dir * 10f
+                        b.y += sin(tick / 10f) * 3f
+                    }
+                    if (b.x < -100f || b.x > screenW + 100f || b.y < -100f) {
+                        toRemoveBoss.add(b)
+                    }
                 }
+                bossDisparos.removeAll(toRemoveBoss)
+
+                // Movimiento de las balas del jugador (botellas)
+                val toRemoveBalas = mutableListOf<Bala>()
+                for (b in balas) {
+                    b.x += b.dir * 14f
+                    if (b.x < -100f || b.x > screenW + 100f) {
+                        toRemoveBalas.add(b)
+                    }
+                }
+                balas.removeAll(toRemoveBalas)
+
+                // Colisión bala (botella) → boss
+                val bossRect = RectF(bossX, bossY - 70f, bossX + 180f, bossY + 110f)
+                val balaGolpe = balas.firstOrNull {
+                    val r = RectF(it.x, it.y, it.x + 40f, it.y + 20f)
+                    RectF.intersects(r, bossRect)
+                }
+                if (balaGolpe != null) {
+                    bossVida -= 2
+                    balas.remove(balaGolpe)
+                    if (bossVida <= 0) completed = true
+                }
+
+                // Colisión disparo del boss (chancla) → jugador
+                val playerRect = RectF(playerX, playerY - dogSize, playerX + dogSize, playerY)
+                for (b in bossDisparos) {
+                    val r = RectF(b.x, b.y, b.x + 40f, b.y + 20f)
+                    if (RectF.intersects(r, playerRect)) {
+                        dead = true
+                        break
+                    }
+                }
+            } else if (dead) {
+                playerY += 14f
             }
         }
     }
 
-    // ✅ Regresa a la pantalla de niveles
-    LaunchedEffect(levelCompleted) {
-        if (levelCompleted) {
+    // ================= REINICIO =================
+    LaunchedEffect(dead) {
+        if (dead) {
+            delay(1200)
+            navController.navigate("level4") {
+                popUpTo("level4") { inclusive = true }
+            }
+        }
+    }
+    LaunchedEffect(completed) {
+        if (completed) {
             delay(1500)
             navController.navigate("levels") {
                 popUpTo("level4") { inclusive = true }
@@ -161,81 +190,105 @@ fun Level4Screen(navController: NavController) {
         }
     }
 
-    // 🎨 Dibujo
+    // ================= DIBUJO =================
     Box(Modifier.fillMaxSize()) {
-        // Fondo extendido
+
+        // Fondo
         Canvas(Modifier.fillMaxSize()) {
-            val bgW = bg.width.toFloat()
-            for (i in -1..8) drawImage(bg, topLeft = Offset(bgW * i - cameraX, 0f))
+            val scale = size.height / fondo.height.toFloat()
+            val scaledWidth = fondo.width * scale
+            val repeatCount = (size.width / scaledWidth).toInt() + 2
+            drawIntoCanvas { canvas ->
+                val nativeCanvas = canvas.nativeCanvas
+                for (i in -1..repeatCount) {
+                    val left = i * scaledWidth
+                    val right = left + scaledWidth
+                    val rectDst = android.graphics.Rect(left.toInt(), 0, right.toInt(), size.height.toInt())
+                    nativeCanvas.drawBitmap(fondo.asAndroidBitmap(), null, rectDst, null)
+                }
+            }
         }
 
-        // Obstáculos
-        obstacles.forEach {
+        // Boss
+        val bossImage = if (bossDir > 0) bossDer else bossIzq
+        Image(
+            bitmap = bossImage,
+            contentDescription = "Boss",
+            modifier = Modifier.offset(bossX.dp, (bossY - 70f).dp).size(180.dp)
+        )
+
+        // Barra de vida del boss
+        Canvas(Modifier.offset(100.dp, 20.dp).size(200.dp, 20.dp)) {
+            drawRect(Color.Gray, size = size)
+            val vida = (bossVida / 100f) * size.width
+            drawRect(Color.Red, topLeft = Offset.Zero, size = androidx.compose.ui.geometry.Size(vida, size.height))
+        }
+
+        // 🐶 Juantino
+        Image(
+            bitmap = dog,
+            contentDescription = "Jugador",
+            modifier = Modifier
+                .offset(playerX.dp, (playerY - dogSize - 70f).dp)
+                .size((dogSize * dogScale).dp)
+        )
+
+        // 💣 Balas de Juantino (botellas)
+        balas.forEach { b ->
             Image(
-                bitmap = piedra,
-                contentDescription = null,
-                modifier = Modifier
-                    .offset((it.left - cameraX).dp, it.top.dp)
-                    .size(it.width().dp, it.height().dp)
+                bitmap = balaJuantino,
+                contentDescription = "BalaJugadorBotella",
+                modifier = Modifier.offset(b.x.dp, (b.y - 10f).dp).size(40.dp, 40.dp)
             )
         }
 
-        // Troncos móviles
-        Image(
-            bitmap = tronco,
-            contentDescription = null,
-            modifier = Modifier
-                .offset((trunk1X - cameraX).dp, (floorY - 95f).dp)
-                .size(trunkWidth.dp, trunkHeight.dp)
-        )
-        Image(
-            bitmap = tronco,
-            contentDescription = null,
-            modifier = Modifier
-                .offset((trunk2X - cameraX).dp, (floorY - 95f).dp)
-                .size(trunkWidth.dp, trunkHeight.dp)
-        )
-
-        // Meta
-        Image(
-            bitmap = casaTio,
-            contentDescription = null,
-            modifier = Modifier
-                .offset((goalRect.left - cameraX).dp, goalRect.top.dp)
-                .size(goalWidth.dp, goalHeight.dp)
-        )
-
-        // Personaje
-        Image(
-            bitmap = dog,
-            contentDescription = null,
-            modifier = Modifier
-                .offset((playerX - cameraX).dp, (playerY - dogSizeDp.value + 22f).dp)
-                .size(dogSizeDp)
-        )
+        // 🥿 Balas del boss (chanclas)
+        bossDisparos.forEach { b ->
+            Image(
+                bitmap = balaMama,
+                contentDescription = "BalaBossChancla",
+                modifier = Modifier.offset(b.x.dp, (b.y - 15f).dp).size(50.dp, 35.dp)
+            )
+        }
 
         // Controles
         Row(
             Modifier.align(Alignment.BottomEnd).padding(20.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            HoldableButton("←") { playerX -= 40f; if (!jumping) dog = dogLeft }
+            HoldableButton("←") { playerX -= 40f; dog = juanIzq; facingRight = false }
             HoldableButton("↑") {
                 if (!jumping) {
-                    jumping = true; velocity = jumpForce; dog = dogJump
+                    jumping = true
+                    velocityY = jumpForce
+                    dog = juanSalto
                 }
             }
-            HoldableButton("→") { playerX += 40f; if (!jumping) dog = dogRight }
+            HoldableButton("→") { playerX += 40f; dog = juanDer; facingRight = true }
+            HoldableButton("🔥") {
+                val dir = if (facingRight) 1f else -1f
+                // 🎯 Ajuste del punto de salida (hocico)
+                balas.add(Bala(playerX + dogSize / 1.5f, playerY - 110f, dir))
+            }
         }
 
-        // Mensaje de victoria
-        if (levelCompleted)
+        // Mensajes
+        if (completed)
             Box(
-                modifier = Modifier.align(Alignment.Center)
+                Modifier.align(Alignment.Center)
                     .background(Color(0xFF3E4A8B), RoundedCornerShape(50))
                     .padding(16.dp)
             ) {
-                Text("¡Nivel completado!", color = Color.White, fontWeight = FontWeight.Bold)
+                Text("¡Derrotaste a mamá!", color = Color.White, fontWeight = FontWeight.Bold)
+            }
+
+        if (dead)
+            Box(
+                Modifier.align(Alignment.Center)
+                    .background(Color(0xFF8B3E3E), RoundedCornerShape(50))
+                    .padding(16.dp)
+            ) {
+                Text("¡Has sido castigado!", color = Color.White, fontWeight = FontWeight.Bold)
             }
     }
 }
