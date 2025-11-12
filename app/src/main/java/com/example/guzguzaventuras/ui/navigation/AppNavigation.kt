@@ -1,5 +1,8 @@
 package com.example.guzguzaventuras.ui.navigation
 
+import Level10Screen
+import Level11Screen
+import Level12Screen
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -10,6 +13,7 @@ import com.example.guzguzaventuras.ui.bar.BarScreen
 import com.example.guzguzaventuras.ui.nightclub.NightclubScreen
 import com.example.guzguzaventuras.ui.levels.*
 import com.example.guzguzaventuras.ui.levels.bar.*
+import com.example.guzguzaventuras.ui.levels.club.*
 import com.example.guzguzaventuras.ui.levels.tio.*
 import com.example.guzguzaventuras.ui.levels_wasa.Levels2Screen
 
@@ -31,8 +35,9 @@ fun AppNavigation(navController: NavHostController) {
         composable("bar") { BarScreen(navController) }
         composable("levels2") { Levels2Screen(navController) }
 
-        // 🌃 MUNDO 3 — NIGHTCLUB (futuro)
+        // 🌃 MUNDO 3 — NIGHTCLUB
         composable("nightclub") { NightclubScreen(navController) }
+        composable("levels3") { Levels3Screen(navController) } // ✅ Menú de niveles del tercer mundo
 
         // 🎮 NIVELES DEL MUNDO 1 (CASA DEL TÍO)
         composable("level1") { Level1Screen(navController) }
@@ -45,5 +50,11 @@ fun AppNavigation(navController: NavHostController) {
         composable("level6") { Level6Screen(navController) }
         composable("level7") { Level7Screen(navController) }
         composable("level8") { Level8Screen(navController) }
+
+        // 🎮 NIVELES DEL MUNDO 3 (NIGHTCLUB)
+        composable("level9") { Level9Screen(navController) }
+        composable("level10") { Level10Screen(navController) }
+        composable("level11") { Level11Screen(navController) }
+        composable("level12") { Level12Screen(navController) }
     }
 }

@@ -1,5 +1,6 @@
-package com.example.guzguzaventuras.ui.levels
+package com.example.guzguzaventuras.ui.levels.club
 
+import android.graphics.Rect
 import android.graphics.RectF
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
@@ -10,7 +11,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
@@ -23,6 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.guzguzaventuras.R
+import com.example.guzguzaventuras.ui.levels.HoldableButton
 import kotlinx.coroutines.delay
 import kotlin.random.Random
 
@@ -171,7 +172,7 @@ fun Level9Screen(navController: NavController) {
                 )
 
                 // Obstáculos
-                obstacles.forEachIndexed { i, o ->
+                obstacles.forEachIndexed { _, o ->
                     val overlap = playerRect.bottom > o.top && playerRect.top < o.bottom &&
                             playerRect.right > o.left && playerRect.left < o.right
                     if (overlap) {
@@ -212,17 +213,19 @@ fun Level9Screen(navController: NavController) {
         }
     }
 
-    // Reinicio
+    // ================= REINICIOS =================
     LaunchedEffect(dead) {
         if (dead) {
             delay(1200)
             navController.navigate("level9") { popUpTo("level9") { inclusive = true } }
         }
     }
+
     LaunchedEffect(completed) {
         if (completed) {
             delay(1500)
-            navController.navigate("levels") { popUpTo("level9") { inclusive = true } }
+            // ✅ Ahora vuelve al menú del Mundo 3
+            navController.navigate("levels3") { popUpTo("level9") { inclusive = true } }
         }
     }
 
@@ -237,7 +240,7 @@ fun Level9Screen(navController: NavController) {
                 val nativeCanvas = canvas.nativeCanvas
                 for (i in -1..repeatCount) {
                     val left = i * scaledWidth - cameraX
-                    val rectDst = android.graphics.Rect(
+                    val rectDst = Rect(
                         left.toInt(), 0, (left + scaledWidth).toInt(), size.height.toInt()
                     )
                     nativeCanvas.drawBitmap(fondo.asAndroidBitmap(), null, rectDst, null)
@@ -257,13 +260,13 @@ fun Level9Screen(navController: NavController) {
             )
         }
 
-        // Policía — 🔹 Subido al nivel de Juantino
+        // Policía — Subido al nivel de Juantino
         policias.forEach { p ->
             Image(
                 bitmap = policia,
                 contentDescription = "Policía",
                 modifier = Modifier
-                    .offset((p.x - cameraX).dp, (floorY - 100f).dp) // 🟢 nivel del perro
+                    .offset((p.x - cameraX).dp, (floorY - 100f).dp)
                     .size(130.dp)
             )
         }
@@ -314,7 +317,11 @@ fun Level9Screen(navController: NavController) {
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             HoldableButton("←") { playerX -= 40f; if (!jumping) dog = perroIzquierda }
-            HoldableButton("↑") { if (!jumping) { jumping = true; velocityY = jumpForce; dog = perroSalto } }
+            HoldableButton("↑") {
+                if (!jumping) {
+                    jumping = true; velocityY = jumpForce; dog = perroSalto
+                }
+            }
             HoldableButton("→") { playerX += 40f; if (!jumping) dog = perroDerecha }
         }
 
