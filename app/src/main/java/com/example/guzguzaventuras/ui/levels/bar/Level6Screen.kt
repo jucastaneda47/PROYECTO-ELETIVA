@@ -1,4 +1,4 @@
-package com.example.guzguzaventuras.ui.levels
+package com.example.guzguzaventuras.ui.levels.bar
 
 import android.graphics.Rect
 import android.graphics.RectF
@@ -11,7 +11,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
@@ -24,6 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.guzguzaventuras.R
+import com.example.guzguzaventuras.ui.levels.HoldableButton
 import kotlinx.coroutines.delay
 import kotlin.math.sin
 
@@ -35,7 +35,7 @@ fun Level6Screen(navController: NavController) {
     val context = LocalContext.current
 
     // 🎨 Imágenes
-    val fondo = ImageBitmap.imageResource(context.resources, R.drawable.fondo_agua) // fondo submarino
+    val fondo = ImageBitmap.imageResource(context.resources, R.drawable.fondo_agua)
     val perro = ImageBitmap.imageResource(context.resources, R.drawable.intermedio)
     val piranaDerecha = ImageBitmap.imageResource(context.resources, R.drawable.pirana_derecha)
     val piranaIzquierda = ImageBitmap.imageResource(context.resources, R.drawable.pirana_izquierda)
@@ -50,7 +50,7 @@ fun Level6Screen(navController: NavController) {
     var cameraX by remember { mutableStateOf(0f) }
     val moveStep = 40f
 
-    // 🐟 Enemigos (pirañas animadas)
+    // 🐟 Enemigos (pirañas)
     class Fish(
         x: Float, y: Float,
         w: Float = 100f, h: Float = 100f,
@@ -66,14 +66,14 @@ fun Level6Screen(navController: NavController) {
 
     val fishes = remember {
         mutableStateListOf(
-            Fish(x = 600f,  y = screenH / 2 - 200f, dir = 1f,  minX = 500f,  maxX = 900f,  speed = 2.5f),
-            Fish(x = 1300f, y = screenH / 2,       dir = -1f, minX = 1100f, maxX = 1500f, speed = 3.0f),
-            Fish(x = 2000f, y = screenH / 2 + 150f,dir = 1f,  minX = 1900f, maxX = 2300f, speed = 2.8f),
-            Fish(x = 2800f, y = screenH / 2 - 100f,dir = -1f, minX = 2700f, maxX = 3100f, speed = 2.6f),
+            Fish(x = 600f, y = screenH / 2 - 200f, dir = 1f, minX = 500f, maxX = 900f, speed = 2.5f),
+            Fish(x = 1300f, y = screenH / 2, dir = -1f, minX = 1100f, maxX = 1500f, speed = 3.0f),
+            Fish(x = 2000f, y = screenH / 2 + 150f, dir = 1f, minX = 1900f, maxX = 2300f, speed = 2.8f),
+            Fish(x = 2800f, y = screenH / 2 - 100f, dir = -1f, minX = 2700f, maxX = 3100f, speed = 2.6f),
         )
     }
 
-    // 🏁 Meta (al fondo)
+    // 🏁 Meta
     val goalX = 3500f
     val goalRect = RectF(goalX, screenH / 2 - 150f, goalX + 300f, screenH / 2 + 100f)
 
@@ -81,16 +81,11 @@ fun Level6Screen(navController: NavController) {
     LaunchedEffect(Unit) {
         while (true) {
             delay(16)
-
             if (!dead && !completed) {
-                // Mantener al perro dentro de la pantalla
                 playerY = playerY.coerceIn(0f, screenH - dogSize)
                 playerX = playerX.coerceAtLeast(0f)
-
-                // Cámara
                 cameraX = (playerX - screenW * 0.3f).coerceAtLeast(0f)
 
-                // Colisiones
                 val playerRect = RectF(playerX, playerY, playerX + dogSize, playerY + dogSize)
                 loop@ for (f in fishes) {
                     val fishRect = RectF(f.x, f.y, f.x + f.w, f.y + f.h)
@@ -104,7 +99,6 @@ fun Level6Screen(navController: NavController) {
                     }
                 }
 
-                // Meta
                 if (playerRect.right > goalRect.left && playerRect.left < goalRect.right) {
                     completed = true
                 }
@@ -121,13 +115,10 @@ fun Level6Screen(navController: NavController) {
             fishes.forEach { f ->
                 f.x += f.dir * f.speed
                 f.time += 0.05f
-                f.y += sin(f.time) * 0.8f // nado ondulante
+                f.y += sin(f.time) * 0.8f
 
-                // Cambiar dirección
                 if (f.x < f.minX) { f.x = f.minX; f.dir = 1f }
                 if (f.x + f.w > f.maxX) { f.x = f.maxX - f.w; f.dir = -1f }
-
-                // Mantener dentro de pantalla
                 f.y = f.y.coerceIn(0f, screenH - f.h)
             }
         }
@@ -143,29 +134,28 @@ fun Level6Screen(navController: NavController) {
         }
     }
 
+    // ✅ CORRECCIÓN: vuelve al menú del mundo 2
     LaunchedEffect(completed) {
         if (completed) {
             delay(1500)
-            navController.navigate("levels") {
+            navController.navigate("levels2") { // 🔥 antes decía "levels"
                 popUpTo("level6") { inclusive = true }
             }
         }
     }
 
     // ================= CONTROLES =================
-    fun moveLeft()  { playerX -= moveStep }
+    fun moveLeft() { playerX -= moveStep }
     fun moveRight() { playerX += moveStep }
-    fun moveUp()    { playerY -= moveStep }
-    fun moveDown()  { playerY += moveStep }
+    fun moveUp() { playerY -= moveStep }
+    fun moveDown() { playerY += moveStep }
 
     // ================= DIBUJO =================
     Box(Modifier.fillMaxSize()) {
-        // 🌊 Fondo que cubre toda la pantalla sin franjas blancas
         Canvas(Modifier.fillMaxSize()) {
             val scale = size.height / fondo.height.toFloat()
             val scaledWidth = fondo.width * scale
             val repeatCount = (size.width / scaledWidth).toInt() + 2
-
             drawIntoCanvas { canvas ->
                 val nativeCanvas = canvas.nativeCanvas
                 for (i in -1..repeatCount) {
@@ -220,7 +210,7 @@ fun Level6Screen(navController: NavController) {
             }
         }
 
-        // ✅ Mensajes finales
+        // ✅ Mensajes
         if (completed)
             Box(
                 Modifier

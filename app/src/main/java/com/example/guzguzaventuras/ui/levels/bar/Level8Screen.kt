@@ -1,4 +1,4 @@
-package com.example.guzguzaventuras.ui.levels
+package com.example.guzguzaventuras.ui.levels.bar
 
 import android.graphics.Rect
 import android.graphics.RectF
@@ -11,7 +11,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
@@ -24,8 +23,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.guzguzaventuras.R
+import com.example.guzguzaventuras.ui.levels.HoldableButton
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.math.abs
 
 @Composable
 fun Level8Screen(navController: NavController) {
@@ -35,7 +36,7 @@ fun Level8Screen(navController: NavController) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    // 🌊 Imágenes (mismo fondo del nivel 6)
+    // 🌊 Imágenes
     val fondo = ImageBitmap.imageResource(context.resources, R.drawable.fondo_agua)
     val perro = ImageBitmap.imageResource(context.resources, R.drawable.intermedio)
     val piranaDerecha = ImageBitmap.imageResource(context.resources, R.drawable.pirana_derecha)
@@ -109,12 +110,11 @@ fun Level8Screen(navController: NavController) {
                 // Disparo de pirañas + animación
                 piranas.forEach { p ->
                     if (tick % p.cooldown == 0) {
-                        // Crear flecha
                         val flechaX = if (p.dir > 0) p.x + 80f else p.x - 80f
                         val flechaY = p.y + 40f
                         flechas.add(Flecha(flechaX, flechaY, p.dir, p.x))
 
-                        // Cambiar imagen a "disparo"
+                        // animación de disparo
                         p.disparando = true
                         scope.launch {
                             delay(300)
@@ -128,7 +128,7 @@ fun Level8Screen(navController: NavController) {
                 while (iterator.hasNext()) {
                     val f = iterator.next()
                     f.x += f.speed * f.dir
-                    val distance = kotlin.math.abs(f.x - f.originX)
+                    val distance = abs(f.x - f.originX)
                     if (distance > f.maxDistance) iterator.remove()
                 }
 
@@ -164,10 +164,13 @@ fun Level8Screen(navController: NavController) {
         }
     }
 
+    // ✅ CORREGIDO → vuelve al menú del segundo mundo
     LaunchedEffect(completed) {
         if (completed) {
             delay(1500)
-            navController.navigate("levels") { popUpTo("level8") { inclusive = true } }
+            navController.navigate("levels2") { // 🔥 antes decía "levels"
+                popUpTo("level8") { inclusive = true }
+            }
         }
     }
 

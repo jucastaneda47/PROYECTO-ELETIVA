@@ -1,4 +1,4 @@
-package com.example.guzguzaventuras.ui.levels
+package com.example.guzguzaventuras.ui.levels.tio
 
 import android.graphics.RectF
 import androidx.compose.animation.core.*
@@ -22,6 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.guzguzaventuras.R
+import com.example.guzguzaventuras.ui.levels.HoldableButton
 import kotlinx.coroutines.delay
 
 @Composable
@@ -219,7 +220,11 @@ fun Level3Screen(navController: NavController) {
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             HoldableButton("←") { playerX -= 40f; if (!jumping) dog = dogLeft }
-            HoldableButton("↑") { if (!jumping) { jumping = true; velocity = -28f; dog = dogJump } }
+            HoldableButton("↑") {
+                if (!jumping) {
+                    jumping = true; velocity = -28f; dog = dogJump
+                }
+            }
             HoldableButton("→") { playerX += 40f; if (!jumping) dog = dogRight }
         }
 

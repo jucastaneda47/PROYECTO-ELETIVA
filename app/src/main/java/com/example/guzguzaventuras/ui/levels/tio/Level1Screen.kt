@@ -1,11 +1,9 @@
-package com.example.guzguzaventuras.ui.levels
+package com.example.guzguzaventuras.ui.levels.tio
 
 import android.graphics.RectF
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -15,15 +13,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.guzguzaventuras.R
+import com.example.guzguzaventuras.ui.levels.HoldableButton
 import kotlinx.coroutines.delay
 
 @Composable
@@ -148,7 +145,9 @@ fun Level1Screen(navController: NavController) {
         ) {
             HoldableButton("←") { playerX -= 40f; if (!jumping) dog = dogLeft }
             HoldableButton("↑") {
-                if (!jumping) { jumping = true; velocity = jumpForce; dog = dogJump }
+                if (!jumping) {
+                    jumping = true; velocity = jumpForce; dog = dogJump
+                }
             }
             HoldableButton("→") { playerX += 40f; if (!jumping) dog = dogRight }
         }

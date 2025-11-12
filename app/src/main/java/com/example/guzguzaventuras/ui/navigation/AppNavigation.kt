@@ -1,6 +1,5 @@
 package com.example.guzguzaventuras.ui.navigation
 
-import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -10,30 +9,41 @@ import com.example.guzguzaventuras.ui.tio.TioScreen
 import com.example.guzguzaventuras.ui.bar.BarScreen
 import com.example.guzguzaventuras.ui.nightclub.NightclubScreen
 import com.example.guzguzaventuras.ui.levels.*
+import com.example.guzguzaventuras.ui.levels.bar.*
+import com.example.guzguzaventuras.ui.levels.tio.*
+import com.example.guzguzaventuras.ui.levels_wasa.Levels2Screen
 
 @Composable
 fun AppNavigation(navController: NavHostController) {
     NavHost(
         navController = navController,
-        startDestination = "inicio"
+        startDestination = "inicio" // 🏠 Pantalla principal
     ) {
-        // 🏠 Pantallas principales
+
+        // 🏠 PANTALLA PRINCIPAL
         composable("inicio") { InicioScreen(navController) }
+
+        // 🏡 MUNDO 1 — CASA DEL TÍO
         composable("tio") { TioScreen(navController) }
-        composable("bar") { BarScreen(navController) }
-        composable("nightclub") { NightclubScreen(navController) }
         composable("levels") { LevelsScreen(navController) }
 
-        // 🎮 Niveles del juego
+        // 🌴 MUNDO 2 — WASA WASA
+        composable("bar") { BarScreen(navController) }
+        composable("levels2") { Levels2Screen(navController) }
+
+        // 🌃 MUNDO 3 — NIGHTCLUB (futuro)
+        composable("nightclub") { NightclubScreen(navController) }
+
+        // 🎮 NIVELES DEL MUNDO 1 (CASA DEL TÍO)
         composable("level1") { Level1Screen(navController) }
         composable("level2") { Level2Screen(navController) }
         composable("level3") { Level3Screen(navController) }
         composable("level4") { Level4Screen(navController) }
+
+        // 🎮 NIVELES DEL MUNDO 2 (WASA WASA)
         composable("level5") { Level5Screen(navController) }
         composable("level6") { Level6Screen(navController) }
         composable("level7") { Level7Screen(navController) }
         composable("level8") { Level8Screen(navController) }
-        composable("level9") { Level9Screen(navController) }
-
     }
 }

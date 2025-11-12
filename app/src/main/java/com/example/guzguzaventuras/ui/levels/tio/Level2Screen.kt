@@ -1,4 +1,4 @@
-package com.example.guzguzaventuras.ui.levels
+package com.example.guzguzaventuras.ui.levels.tio
 
 import android.graphics.RectF
 import androidx.compose.foundation.Canvas
@@ -19,6 +19,7 @@ import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.guzguzaventuras.R
+import com.example.guzguzaventuras.ui.levels.HoldableButton
 import kotlinx.coroutines.delay
 
 @Composable
@@ -176,7 +177,9 @@ fun Level2Screen(navController: NavController) {
         ) {
             HoldableButton("←") { playerX -= 40f; if (!jumping) dog = dogLeft }
             HoldableButton("↑") {
-                if (!jumping) { jumping = true; velocity = jumpForce; dog = dogJump }
+                if (!jumping) {
+                    jumping = true; velocity = jumpForce; dog = dogJump
+                }
             }
             HoldableButton("→") { playerX += 40f; if (!jumping) dog = dogRight }
         }
