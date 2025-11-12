@@ -47,7 +47,7 @@ fun Level4Screen(navController: NavController) {
     val balaJuantino = ImageBitmap.imageResource(context.resources, R.drawable.botella)
     val balaMama = ImageBitmap.imageResource(context.resources, R.drawable.chancla)
 
-    // 🐶 Juantinofxd
+    // 🐶 Juantino
     var dog by remember { mutableStateOf(juanQuieto) }
     val dogSize = 100f
     val dogScale = 1.35f
@@ -96,6 +96,12 @@ fun Level4Screen(navController: NavController) {
                         dog = if (facingRight) juanDer else juanIzq
                     }
                 }
+
+                // 🧱 Evitar que Juantino se salga del nivel
+                if (playerX < 0f) playerX = 0f
+                if (playerX > screenW - dogSize) playerX = screenW - dogSize
+                if (playerY < 0f) playerY = 0f
+                if (playerY > floorY) playerY = floorY
 
                 // Movimiento del boss
                 bossX += bossDir * 3f
@@ -224,7 +230,7 @@ fun Level4Screen(navController: NavController) {
             drawRect(Color.Red, topLeft = Offset.Zero, size = androidx.compose.ui.geometry.Size(vida, size.height))
         }
 
-        // 🐶 Juantino
+        // Juantino
         Image(
             bitmap = dog,
             contentDescription = "Jugador",
@@ -233,7 +239,7 @@ fun Level4Screen(navController: NavController) {
                 .size((dogSize * dogScale).dp)
         )
 
-        // 💣 Balas de Juantino (botellas)
+        // Balas de Juantino (botellas)
         balas.forEach { b ->
             Image(
                 bitmap = balaJuantino,
@@ -242,7 +248,7 @@ fun Level4Screen(navController: NavController) {
             )
         }
 
-        // 🥿 Balas del boss (chanclas)
+        // Balas del boss (chanclas)
         bossDisparos.forEach { b ->
             Image(
                 bitmap = balaMama,
@@ -267,7 +273,6 @@ fun Level4Screen(navController: NavController) {
             HoldableButton("→") { playerX += 40f; dog = juanDer; facingRight = true }
             HoldableButton("🔥") {
                 val dir = if (facingRight) 1f else -1f
-                // 🎯 Ajuste del punto de salida (hocico)
                 balas.add(Bala(playerX + dogSize / 1.5f, playerY - 110f, dir))
             }
         }
