@@ -45,7 +45,7 @@ fun Level11Screen(navController: NavController) {
     val hindigente = ImageBitmap.imageResource(context.resources, R.drawable.hindigente)
     val policia = ImageBitmap.imageResource(context.resources, R.drawable.policia)
     val flechaImg = ImageBitmap.imageResource(context.resources, R.drawable.pipe)
-    val casaTio = ImageBitmap.imageResource(context.resources, R.drawable.casa_tio)
+    val casaTio = ImageBitmap.imageResource(context.resources, R.drawable.dakiti)
 
     // 🐶 Jugador
     var dog by remember { mutableStateOf(perroQuieto) }

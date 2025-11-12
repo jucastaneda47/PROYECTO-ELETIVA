@@ -39,7 +39,7 @@ fun Level7Screen(navController: NavController) {
     val perro = ImageBitmap.imageResource(context.resources, R.drawable.juantino_agua)
     val piranaDerecha = ImageBitmap.imageResource(context.resources, R.drawable.pirana_derecha)
     val piranaIzquierda = ImageBitmap.imageResource(context.resources, R.drawable.pirana_izquierda)
-    val metaImg = ImageBitmap.imageResource(context.resources, R.drawable.casa_tio)
+    val metaImg = ImageBitmap.imageResource(context.resources, R.drawable.wasa)
 
     // 🐶 Jugador
     val dogSize = 100f

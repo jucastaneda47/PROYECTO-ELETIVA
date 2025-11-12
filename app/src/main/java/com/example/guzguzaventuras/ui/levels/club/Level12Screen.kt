@@ -38,11 +38,11 @@ fun Level12Screen(navController: NavController) {
     val fondo = ImageBitmap.imageResource(context.resources, R.drawable.niveles)
     val bossMama = ImageBitmap.imageResource(context.resources, R.drawable.mami)
     val bossPolicia = ImageBitmap.imageResource(context.resources, R.drawable.policia)
-    val bossColmenares = ImageBitmap.imageResource(context.resources, R.drawable.policia)
+    val bossColmenares = ImageBitmap.imageResource(context.resources, R.drawable.diablito)
 
     val balaMama = ImageBitmap.imageResource(context.resources, R.drawable.chancla)
-    val balaPolicia = ImageBitmap.imageResource(context.resources, R.drawable.flecha_derecha)
-    val balaColmenares = ImageBitmap.imageResource(context.resources, R.drawable.flecha_izquierda)
+    val balaPolicia = ImageBitmap.imageResource(context.resources, R.drawable.multa)
+    val balaColmenares = ImageBitmap.imageResource(context.resources, R.drawable.tridente)
     val balaJuantino = ImageBitmap.imageResource(context.resources, R.drawable.botella)
 
     // 🐶 Juantino
@@ -67,7 +67,7 @@ fun Level12Screen(navController: NavController) {
 
     // 👹 Boss
     var bossX by remember { mutableStateOf(800f) }
-    var bossY by remember { mutableStateOf(floorY - 150f) }
+    var bossY by remember { mutableStateOf(floorY - 150f) } // 🔸 posición estándar (mami/policía)
     var bossDir by remember { mutableStateOf(1f) }
     var bossVida by remember { mutableStateOf(70) }
     var phase by remember { mutableStateOf(1) } // 1: mamá, 2: policía, 3: colmenares
@@ -100,7 +100,7 @@ fun Level12Screen(navController: NavController) {
                     }
                 }
 
-                // 🔒 Evitar que se salga de la pantalla
+                // 🔒 Limites pantalla
                 if (playerX < 0f) playerX = 0f
                 if (playerX > screenW - dogSize) playerX = screenW - dogSize
                 if (playerY < 0f) playerY = 0f
@@ -116,7 +116,7 @@ fun Level12Screen(navController: NavController) {
                 if (bossX < 300f) bossDir = 1f
                 if (bossX > screenW - 250f) bossDir = -1f
 
-                // Disparos del boss (frecuencia según fase)
+                // Disparos boss
                 val shootRate = when (phase) {
                     1 -> 70
                     2 -> 55
@@ -124,19 +124,15 @@ fun Level12Screen(navController: NavController) {
                 }
                 if (tick % shootRate == 0) {
                     val dir = if (bossDir > 0) 1f else -1f
-                    val offsetY = when (phase) {
-                        3 -> Random.nextFloat() * 120f - 60f // colmenares dispara abanico
-                        else -> 0f
-                    }
+                    val offsetY = if (phase == 3) Random.nextFloat() * 120f - 60f else 0f
                     balasBoss.add(Bala(bossX + 50f, bossY + 50f + offsetY, dir))
                     if (phase == 3) {
-                        // Colmenares dispara triple
                         balasBoss.add(Bala(bossX + 50f, bossY + 30f, dir))
                         balasBoss.add(Bala(bossX + 50f, bossY + 70f, dir))
                     }
                 }
 
-                // Movimiento balas del boss
+                // Movimiento balas
                 val removeBoss = mutableListOf<Bala>()
                 for (b in balasBoss) {
                     b.x += b.dir * 10f
@@ -145,7 +141,6 @@ fun Level12Screen(navController: NavController) {
                 }
                 balasBoss.removeAll(removeBoss)
 
-                // Movimiento balas jugador
                 val removePlayer = mutableListOf<Bala>()
                 for (b in balasJugador) {
                     b.x += b.dir * 14f
@@ -161,7 +156,6 @@ fun Level12Screen(navController: NavController) {
                     bossY + if (phase == 3) 200f else 110f
                 )
 
-                // Jugador → Boss
                 val balaGolpe = balasJugador.firstOrNull {
                     val r = RectF(it.x, it.y, it.x + 40f, it.y + 20f)
                     RectF.intersects(r, bossRect)
@@ -175,7 +169,6 @@ fun Level12Screen(navController: NavController) {
                     }
                 }
 
-                // Boss → Jugador
                 val playerRect = RectF(playerX, playerY - dogSize, playerX + dogSize, playerY)
                 for (b in balasBoss) {
                     val r = RectF(b.x, b.y, b.x + 40f, b.y + 20f)
@@ -185,31 +178,27 @@ fun Level12Screen(navController: NavController) {
                     }
                 }
 
-                // Cambio de fase
+                // Cambios de fase
                 if (!bossAlive) {
                     when (phase) {
                         1 -> {
                             phase = 2
                             bossVida = 70
                             bossX = screenW - 400f
-                            bossY = floorY - 150f
+                            bossY = floorY - 150f // policía al mismo nivel
                             bossAlive = true
                         }
                         2 -> {
                             phase = 3
                             bossVida = 140
                             bossX = screenW - 400f
-                            bossY = floorY - 150f
+                            bossY = floorY - 200f // 🔼 solo el diablito más alto
                             bossAlive = true
                         }
-                        3 -> {
-                            completed = true
-                        }
+                        3 -> completed = true
                     }
                 }
-            } else if (dead) {
-                playerY += 14f
-            }
+            } else if (dead) playerY += 14f
         }
     }
 
@@ -222,10 +211,11 @@ fun Level12Screen(navController: NavController) {
             }
         }
     }
+
     LaunchedEffect(completed) {
         if (completed) {
             delay(1500)
-            navController.navigate("levels") {
+            navController.navigate("levels3") {
                 popUpTo("level12") { inclusive = true }
             }
         }
@@ -233,7 +223,6 @@ fun Level12Screen(navController: NavController) {
 
     // =================== DIBUJO ===================
     Box(Modifier.fillMaxSize()) {
-
         // Fondo
         Canvas(Modifier.fillMaxSize()) {
             val scale = size.height / fondo.height.toFloat()
@@ -250,7 +239,7 @@ fun Level12Screen(navController: NavController) {
             }
         }
 
-        // Boss según fase
+        // Boss
         val bossImg = when (phase) {
             1 -> bossMama
             2 -> bossPolicia
@@ -263,7 +252,7 @@ fun Level12Screen(navController: NavController) {
                 .size(if (phase == 3) 250.dp else 180.dp)
         )
 
-        // Barra de vida
+        // Barra vida
         Canvas(Modifier.offset(100.dp, 20.dp).size(250.dp, 20.dp)) {
             drawRect(Color.Gray, size = size)
             val vida = (bossVida / if (phase == 3) 140f else 70f) * size.width
@@ -278,7 +267,7 @@ fun Level12Screen(navController: NavController) {
                 .size((dogSize * dogScale).dp)
         )
 
-        // Balas del jugador
+        // Balas de Juantino
         balasJugador.forEach { b ->
             Image(
                 bitmap = balaJuantino,
@@ -294,12 +283,16 @@ fun Level12Screen(navController: NavController) {
             2 -> balaPolicia
             else -> balaColmenares
         }
+        val balaSize = when (phase) {
+            1 -> 80.dp // chancla grande
+            2 -> 80.dp // multa grande
+            else -> 55.dp
+        }
         balasBoss.forEach { b ->
             Image(
                 bitmap = balaImg,
                 contentDescription = "BalaBoss",
-                modifier = Modifier.offset(b.x.dp, b.y.dp)
-                    .size(if (phase == 3) 60.dp else 45.dp)
+                modifier = Modifier.offset(b.x.dp, b.y.dp).size(balaSize)
             )
         }
 
@@ -311,9 +304,7 @@ fun Level12Screen(navController: NavController) {
             HoldableButton("←") { playerX -= 40f; dog = juanIzq; facingRight = false }
             HoldableButton("↑") {
                 if (!jumping) {
-                    jumping = true
-                    velocityY = jumpForce
-                    dog = juanSalto
+                    jumping = true; velocityY = jumpForce; dog = juanSalto
                 }
             }
             HoldableButton("→") { playerX += 40f; dog = juanDer; facingRight = true }
@@ -329,17 +320,13 @@ fun Level12Screen(navController: NavController) {
                 Modifier.align(Alignment.Center)
                     .background(Color(0xFF3E4A8B), RoundedCornerShape(50))
                     .padding(20.dp)
-            ) {
-                Text("¡Has vencido al Gran Colmenares!", color = Color.White, fontWeight = FontWeight.Bold)
-            }
+            ) { Text("¡Has vencido al Gran Colmenares!", color = Color.White, fontWeight = FontWeight.Bold) }
 
         if (dead)
             Box(
                 Modifier.align(Alignment.Center)
                     .background(Color(0xFF8B3E3E), RoundedCornerShape(50))
                     .padding(20.dp)
-            ) {
-                Text("¡Has caído en la batalla final!", color = Color.White, fontWeight = FontWeight.Bold)
-            }
+            ) { Text("¡Has caído en la batalla final!", color = Color.White, fontWeight = FontWeight.Bold) }
     }
 }

@@ -41,7 +41,6 @@ fun Level2Screen(navController: NavController) {
 
     var dog by remember { mutableStateOf(dogQuieto) }
 
-    // 🔼 Aumentamos el tamaño del perro para hacerlo más visible
     val dogSizeDp = 120.dp
     val floorY = screenH * 0.60f
 
@@ -57,7 +56,7 @@ fun Level2Screen(navController: NavController) {
     val gravity   = 2.2f
     val jumpForce = -28f
 
-    // ==== HUECOS ALINEADOS AL SPRITE ====
+    // ==== HUECOS ====
     data class Hole(val rect: RectF)
 
     val HOLE_LEFT_RATIO  = 0.17f
@@ -149,7 +148,10 @@ fun Level2Screen(navController: NavController) {
 
         Canvas(Modifier.fillMaxSize()) {
             val bgW = bg.width.toFloat()
-            for (i in -1..5) {
+            val totalWidth = goalX + 800f // 🔥 un poco más de fondo después de la meta
+            val repeatCount = (totalWidth / bgW).toInt() + 3 // 🔁 cálculo dinámico
+
+            for (i in -1..repeatCount) {
                 drawImage(image = bg, topLeft = Offset(bgW * i - cameraX, 0f))
             }
         }
@@ -171,6 +173,7 @@ fun Level2Screen(navController: NavController) {
                 .size(dogSizeDp)
         )
 
+        // Controles
         Row(
             Modifier.align(Alignment.BottomEnd).padding(20.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -184,6 +187,7 @@ fun Level2Screen(navController: NavController) {
             HoldableButton("→") { playerX += 40f; if (!jumping) dog = dogRight }
         }
 
+        // Mensajes
         if (completed) {
             Box(
                 Modifier.align(Alignment.Center)

@@ -43,7 +43,7 @@ fun Level10Screen(navController: NavController) {
     val piranaIzquierda = ImageBitmap.imageResource(context.resources, R.drawable.pirana_izquierda)
     val piranaDerechaDisparo = ImageBitmap.imageResource(context.resources, R.drawable.pirana_dc_dis)
     val piranaIzquierdaDisparo = ImageBitmap.imageResource(context.resources, R.drawable.pirana_iz_dis)
-    val metaImg = ImageBitmap.imageResource(context.resources, R.drawable.casa_tio)
+    val metaImg = ImageBitmap.imageResource(context.resources, R.drawable.dakiti)
     val flechaDerecha = ImageBitmap.imageResource(context.resources, R.drawable.flecha_derecha)
     val flechaIzquierda = ImageBitmap.imageResource(context.resources, R.drawable.flecha_izquierda)
 

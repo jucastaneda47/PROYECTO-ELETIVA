@@ -37,7 +37,7 @@ fun Level9Screen(navController: NavController) {
     val bg = ImageBitmap.imageResource(context.resources, R.drawable.niveles)
     val piedra = ImageBitmap.imageResource(context.resources, R.drawable.piedra)
     val tronco = ImageBitmap.imageResource(context.resources, R.drawable.tronco)
-    val casaTio = ImageBitmap.imageResource(context.resources, R.drawable.casa_tio)
+    val casaTio = ImageBitmap.imageResource(context.resources, R.drawable.dakiti)
     val policia = ImageBitmap.imageResource(context.resources, R.drawable.policia)
 
     // ======= Personaje =======
