@@ -28,7 +28,7 @@ fun Levels3Screen(navController: NavHostController) {
         ) {
             // ✅ Título
             Text(
-                text = "NIVELES NIGHTCLUB",
+                text = "NIVELES",
                 style = MaterialTheme.typography.headlineMedium,
                 color = Color.Black,
                 modifier = Modifier.padding(top = 16.dp)

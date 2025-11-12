@@ -151,12 +151,12 @@ fun Level5Screen(navController: NavController) {
         }
     }
 
-    // ✅ Regresa a la pantalla de niveles
+    // ✅ Regresa a la pantalla de niveles 2
     LaunchedEffect(levelCompleted) {
         if (levelCompleted) {
             delay(1500)
-            navController.navigate("levels") {
-                popUpTo("level4") { inclusive = true }
+            navController.navigate("levels2") {
+                popUpTo("level5") { inclusive = true }
             }
         }
     }

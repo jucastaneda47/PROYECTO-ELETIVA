@@ -36,7 +36,7 @@ fun Level7Screen(navController: NavController) {
 
     // 🎨 Imágenes
     val fondo = ImageBitmap.imageResource(context.resources, R.drawable.fondo_agua)
-    val perro = ImageBitmap.imageResource(context.resources, R.drawable.intermedio)
+    val perro = ImageBitmap.imageResource(context.resources, R.drawable.juantino_agua)
     val piranaDerecha = ImageBitmap.imageResource(context.resources, R.drawable.pirana_derecha)
     val piranaIzquierda = ImageBitmap.imageResource(context.resources, R.drawable.pirana_izquierda)
     val metaImg = ImageBitmap.imageResource(context.resources, R.drawable.casa_tio)
@@ -125,21 +125,23 @@ fun Level7Screen(navController: NavController) {
     }
 
     // ================= EVENTOS =================
+
+    // 💀 Cuando muere, reinicia el propio nivel 7
     LaunchedEffect(dead) {
         if (dead) {
             delay(1200)
-            navController.navigate("level6") {
-                popUpTo("level6") { inclusive = true }
+            navController.navigate("level7") { // 🔥 ahora vuelve al mismo nivel (no al 6)
+                popUpTo("level7") { inclusive = true }
             }
         }
     }
 
-    // ✅ CORRECCIÓN: vuelve al menú del mundo 2
+    // ✅ Cuando gana, vuelve al menú del mundo 2
     LaunchedEffect(completed) {
         if (completed) {
             delay(1500)
-            navController.navigate("levels2") { // 🔥 antes decía "levels"
-                popUpTo("level6") { inclusive = true }
+            navController.navigate("levels2") {
+                popUpTo("level7") { inclusive = true }
             }
         }
     }

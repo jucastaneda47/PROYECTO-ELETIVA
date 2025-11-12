@@ -63,12 +63,12 @@ fun Level9Screen(navController: NavController) {
     // ======= Obstáculos =======
     val H = 100f
     val obstacles = listOf(
-        RectF(900f, floorY - H, 1020f, floorY),   // piedra
-        RectF(1400f, floorY - H, 1520f, floorY),  // piedra
-        RectF(2000f, floorY - H, 2120f, floorY),  // tronco
-        RectF(2800f, floorY - H, 2920f, floorY),  // piedra
-        RectF(3600f, floorY - H, 3720f, floorY),  // piedra
-        RectF(4400f, floorY - H, 4520f, floorY)   // piedra
+        RectF(900f, floorY - H, 1020f, floorY),
+        RectF(1400f, floorY - H, 1520f, floorY),
+        RectF(2000f, floorY - H, 2120f, floorY),
+        RectF(2800f, floorY - H, 2920f, floorY),
+        RectF(3600f, floorY - H, 3720f, floorY),
+        RectF(4400f, floorY - H, 4520f, floorY)
     )
 
     // ======= Policías =======
@@ -159,16 +159,18 @@ fun Level9Screen(navController: NavController) {
     LaunchedEffect(dead) {
         if (dead) {
             delay(1200)
-            navController.navigate("level7") { popUpTo("level7") { inclusive = true } }
+            navController.navigate("level9") { // ✅ ahora se reinicia el mismo nivel
+                popUpTo("level9") { inclusive = true }
+            }
         }
     }
 
-    // ✅ CORREGIDO → vuelve al menú del segundo mundo
+    // ✅ Cuando gana, vuelve al menú del tercer mundo
     LaunchedEffect(completed) {
         if (completed) {
             delay(1500)
-            navController.navigate("levels2") { // 🔥 antes decía "levels"
-                popUpTo("level7") { inclusive = true }
+            navController.navigate("levels3") { // 🔥 cambio aplicado
+                popUpTo("level9") { inclusive = true }
             }
         }
     }
@@ -233,6 +235,7 @@ fun Level9Screen(navController: NavController) {
             )
         }
 
+        // 🎮 Controles
         Row(
             Modifier.align(Alignment.BottomEnd).padding(20.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -246,6 +249,7 @@ fun Level9Screen(navController: NavController) {
             HoldableButton("→") { playerX += 40f; if (!jumping) dog = dogRight }
         }
 
+        // 🧾 Mensajes
         if (completed)
             Box(
                 Modifier.align(Alignment.Center)

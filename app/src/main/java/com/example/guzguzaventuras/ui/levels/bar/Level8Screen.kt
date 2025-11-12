@@ -38,7 +38,7 @@ fun Level8Screen(navController: NavController) {
     val fondo = ImageBitmap.imageResource(context.resources, R.drawable.fondo_agua)
     val piranaDer = ImageBitmap.imageResource(context.resources, R.drawable.pirana_derecha)
     val piranaIzq = ImageBitmap.imageResource(context.resources, R.drawable.pirana_izquierda)
-    val juanQuieto = ImageBitmap.imageResource(context.resources, R.drawable.intermedio)
+    val juanQuieto = ImageBitmap.imageResource(context.resources, R.drawable.juantino_agua)
     val juanDer = ImageBitmap.imageResource(context.resources, R.drawable.hacia_delante)
     val juanIzq = ImageBitmap.imageResource(context.resources, R.drawable.hacia_atras)
     val balaJugador = ImageBitmap.imageResource(context.resources, R.drawable.botella)
@@ -163,10 +163,12 @@ fun Level8Screen(navController: NavController) {
             }
         }
     }
+
+    // ✅ Ahora devuelve al menú del segundo mundo (levels2Screen)
     LaunchedEffect(completed) {
         if (completed) {
             delay(1500)
-            navController.navigate("levels") {
+            navController.navigate("levels2") { // 🔥 corregido aquí
                 popUpTo("level8") { inclusive = true }
             }
         }

@@ -239,7 +239,7 @@ fun Level4Screen(navController: NavController) {
                 .size((dogSize * dogScale).dp)
         )
 
-        // Balas de Juantino (botellas)
+        // 💣 Balas de Juantino (botellas)
         balas.forEach { b ->
             Image(
                 bitmap = balaJuantino,
@@ -248,12 +248,14 @@ fun Level4Screen(navController: NavController) {
             )
         }
 
-        // Balas del boss (chanclas)
+        // 🥿 Balas del boss (chanclas grandes visualmente)
         bossDisparos.forEach { b ->
             Image(
                 bitmap = balaMama,
                 contentDescription = "BalaBossChancla",
-                modifier = Modifier.offset(b.x.dp, (b.y - 15f).dp).size(50.dp, 35.dp)
+                modifier = Modifier
+                    .offset(b.x.dp, (b.y - 25f).dp) // ajusta posición vertical
+                    .size(100.dp, 70.dp) // 💥 tamaño visual aumentado al doble
             )
         }
 

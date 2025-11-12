@@ -217,15 +217,19 @@ fun Level11Screen(navController: NavController) {
     LaunchedEffect(dead) {
         if (dead) {
             delay(1200)
-            navController.navigate("level9") { popUpTo("level9") { inclusive = true } }
+            navController.navigate("level11") { // ✅ se reinicia el mismo nivel
+                popUpTo("level11") { inclusive = true }
+            }
         }
     }
 
+    // ✅ Cuando gana → vuelve al menú del tercer mundo
     LaunchedEffect(completed) {
         if (completed) {
             delay(1500)
-            // ✅ Ahora vuelve al menú del Mundo 3
-            navController.navigate("levels3") { popUpTo("level9") { inclusive = true } }
+            navController.navigate("levels3") {
+                popUpTo("level11") { inclusive = true }
+            }
         }
     }
 
@@ -260,7 +264,7 @@ fun Level11Screen(navController: NavController) {
             )
         }
 
-        // Policía — Subido al nivel de Juantino
+        // Policía
         policias.forEach { p ->
             Image(
                 bitmap = policia,

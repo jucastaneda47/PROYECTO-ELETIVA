@@ -145,18 +145,18 @@ fun Level6Screen(navController: NavController) {
     LaunchedEffect(dead) {
         if (dead) {
             delay(1200)
-            navController.navigate("level5") { // ✅ ruta según tu AppNavigation
-                popUpTo("level5") { inclusive = true }
+            navController.navigate("level6") { // ✅ ahora vuelve a Level6Screen
+                popUpTo("level6") { inclusive = true }
             }
         }
     }
 
-    // ✅ Vuelta al menú del mundo 2
+    // ✅ Vuelta al menú del mundo 2 al completar
     LaunchedEffect(completed) {
         if (completed) {
             delay(1500)
-            navController.navigate("levels2") { // ✅ menú correcto
-                popUpTo("level5") { inclusive = true }
+            navController.navigate("levels2") { // menú correcto
+                popUpTo("level6") { inclusive = true }
             }
         }
     }

@@ -38,7 +38,7 @@ fun Level10Screen(navController: NavController) {
 
     // 🌊 Imágenes
     val fondo = ImageBitmap.imageResource(context.resources, R.drawable.fondo_agua)
-    val perro = ImageBitmap.imageResource(context.resources, R.drawable.intermedio)
+    val perro = ImageBitmap.imageResource(context.resources, R.drawable.juantino_agua)
     val piranaDerecha = ImageBitmap.imageResource(context.resources, R.drawable.pirana_derecha)
     val piranaIzquierda = ImageBitmap.imageResource(context.resources, R.drawable.pirana_izquierda)
     val piranaDerechaDisparo = ImageBitmap.imageResource(context.resources, R.drawable.pirana_dc_dis)
@@ -160,16 +160,18 @@ fun Level10Screen(navController: NavController) {
     LaunchedEffect(dead) {
         if (dead) {
             delay(1200)
-            navController.navigate("level8") { popUpTo("level8") { inclusive = true } }
+            navController.navigate("level10") { // ✅ ahora reinicia el mismo nivel
+                popUpTo("level10") { inclusive = true }
+            }
         }
     }
 
-    // ✅ CORREGIDO → vuelve al menú del segundo mundo
+    // ✅ Cuando gana, vuelve al menú del tercer mundo
     LaunchedEffect(completed) {
         if (completed) {
             delay(1500)
-            navController.navigate("levels2") { // 🔥 antes decía "levels"
-                popUpTo("level8") { inclusive = true }
+            navController.navigate("levels3") { // 🔥 cambio aplicado
+                popUpTo("level10") { inclusive = true }
             }
         }
     }
